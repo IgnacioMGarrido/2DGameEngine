@@ -58,12 +58,32 @@ void _log(const char* i_prefix, const char* i_message, TextColor i_textColor, Ar
 } //namespace
 
 #ifdef DEBUG
+
+#ifdef _WIN32
+#define DEBUG_BREAK() __debugbreak()
+#elif __linux__
+#define DEBUG_BREAK() __builtin_debugtrap()
+#elif __APPPLE__
+#define DEBUG_BREAK() __builtin_trap()
+#endif
+
 #define LOG_TRACE(msg, ...) _log("TRACE: ", msg, TextColor::TEXT_COLOR_GREEN, ##__VA_ARGS__)
 #define LOG_WARNING(msg, ...) _log("WARNING: ", msg, TextColor::TEXT_COLOR_YELLOW, ##__VA_ARGS__)
 #define LOG_ERROR(msg, ...) _log("ERROR: ", msg, TextColor::TEXT_COLOR_RED, ##__VA_ARGS__)
+#define LOG_ASSERT(x, msg, ...)					\
+	{											\
+		if(!(x))								\
+		{										\
+			LOG_ERROR(msg, ##__VA_ARGS__);		\
+			DEBUG_BREAK();						\
+			LOG_ERROR("ASSERT");				\
+		}										\
+	}											\
+
 #else
 #define LOG_TRACE(msg, ...) do{}while(false)
 #define LOG_WARNING(msg, ...) do{}while(false)
 #define LOG_ERROR(msg, ...) do{}while(false)
+#define LOG_ASSERT(x, msg, ...) do{}while(false)
 #endif
 
