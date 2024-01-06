@@ -14,7 +14,7 @@ public:
 	};
 	EWindow(const WinData& i_winData);
 
-	void UpdateWindow();
+	void UpdateWindowMessages();
 
 private:
 	bool Init(const WinData& i_winData);
