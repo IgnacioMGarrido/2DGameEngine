@@ -6,24 +6,46 @@ namespace core::platform
 namespace
 {
 
-//TODO(Nacho): This is a global for now we will set this elsewhere
-static bool s_running;
-static BITMAPINFO s_bitmapInfo;
-static void* s_bitmapMemory;
-static int s_bitmapWidth;
-static int s_bitmapHeight;
-static int s_bytesPerPixel = 4;
+struct OffscreenBuffer
+{
+	BITMAPINFO info;
+	void* memory;
+	int width;
+	int height;
+	int bytesPerPixel = 4;
+};
+static OffscreenBuffer s_offscreenBuffer;
+
+struct WindowDimensions
+{
+	int width;
+	int height;
+};
+bool s_running;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void DrawGradient(int i_xOffset, int i_yOffset)
+static WindowDimensions GetWindowDimensions(HWND i_wnd)
 {
-	int pitch = s_bitmapWidth * s_bytesPerPixel;
-	uint8_t* row = (uint8_t*) s_bitmapMemory;
-	for(int y = 0; y < s_bitmapHeight; y++)
+	WindowDimensions windowDimensions;
+	RECT clientRect;
+	GetClientRect(i_wnd, &clientRect);
+	windowDimensions.width = clientRect.right - clientRect.left;
+	windowDimensions.height = clientRect.bottom - clientRect.top;
+
+	return windowDimensions;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static void DrawGradient(OffscreenBuffer& i_offscreenBuffer, int i_xOffset, int i_yOffset)
+{
+	int pitch = i_offscreenBuffer.width * i_offscreenBuffer.bytesPerPixel;
+	uint8_t* row = (uint8_t*) i_offscreenBuffer.memory;
+	for(int y = 0; y < i_offscreenBuffer.height; y++)
 	{
 		uint32_t* pixel = (uint32_t*) row;
-		for(int x = 0; x < s_bitmapWidth; x++)
+		for(int x = 0; x < i_offscreenBuffer.width; x++)
 		{
 			uint8_t b = x + i_xOffset;
 			uint8_t r = y + i_yOffset;
@@ -35,36 +57,30 @@ static void DrawGradient(int i_xOffset, int i_yOffset)
 
 }
 
-static void ResizeDIBSection(int i_width, int i_height)
+static void ResizeDIBSection(OffscreenBuffer& i_offscreenBuffer, int i_width, int i_height)
 {
-	s_bitmapWidth = i_width;
-	s_bitmapHeight = i_height;
+	i_offscreenBuffer.width = i_width;
+	i_offscreenBuffer.height = i_height;
 
-	s_bitmapInfo.bmiHeader.biSize = sizeof(s_bitmapInfo.bmiHeader);
-	s_bitmapInfo.bmiHeader.biWidth = s_bitmapWidth;
-	s_bitmapInfo.bmiHeader.biHeight = -s_bitmapHeight;
-	s_bitmapInfo.bmiHeader.biPlanes = 1;
-	s_bitmapInfo.bmiHeader.biBitCount = 32;
-	s_bitmapInfo.bmiHeader.biCompression = BI_RGB;
+	i_offscreenBuffer.info.bmiHeader.biSize = sizeof(i_offscreenBuffer.info.bmiHeader);
+	i_offscreenBuffer.info.bmiHeader.biWidth = i_offscreenBuffer.width;
+	i_offscreenBuffer.info.bmiHeader.biHeight = -i_offscreenBuffer.height;
+	i_offscreenBuffer.info.bmiHeader.biPlanes = 1;
+	i_offscreenBuffer.info.bmiHeader.biBitCount = 32;
+	i_offscreenBuffer.info.bmiHeader.biCompression = BI_RGB;
 
-	int bitmapMemorySize = s_bytesPerPixel * s_bitmapWidth * s_bitmapHeight;
-	s_bitmapMemory = VirtualAlloc(0, bitmapMemorySize, MEM_COMMIT, PAGE_READWRITE);
-
-	DrawGradient(5, 8);
-
+	int bitmapMemorySize = i_offscreenBuffer.bytesPerPixel * i_offscreenBuffer.width * i_offscreenBuffer.height;
+	i_offscreenBuffer.memory = VirtualAlloc(0, bitmapMemorySize, MEM_COMMIT, PAGE_READWRITE);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void UpdateWindowBuffer(HDC i_deviceContext, RECT* i_rect, int i_x, int i_y, int i_width, int i_height)
+static void UpdateWindowBuffer(HDC i_deviceContext, int i_windowWidth, int i_windowHeight, int i_x, int i_y, int i_width, int i_height)
 {
-
-	int windowWidth = i_rect->right - i_rect->left;
-	int windowHeight = i_rect->bottom - i_rect->top;
 	StretchDIBits(i_deviceContext,
-				  0, 0, s_bitmapWidth, s_bitmapHeight,
-				  0, 0, windowWidth, windowHeight,
-				  s_bitmapMemory, &s_bitmapInfo,
+				  0, 0, s_offscreenBuffer.width, s_offscreenBuffer.height,
+				  0, 0, i_windowWidth, i_windowHeight,
+				  s_offscreenBuffer.memory, &s_offscreenBuffer.info,
 				  DIB_RGB_COLORS, SRCCOPY);
 }
 
@@ -72,17 +88,14 @@ static void UpdateWindowBuffer(HDC i_deviceContext, RECT* i_rect, int i_x, int i
 
 LRESULT CALLBACK WinWindowsCb(HWND i_wnd, UINT i_msg, WPARAM i_wParam, LPARAM i_lParam)
 {
+	//TODO(Nacho): Obtain the class Pointer to access the offsetBuffer.
 	LRESULT result = 0;
 	switch(i_msg)
 	{
 		case WM_SIZE:
 		{
-			RECT clientRect;
-			GetClientRect(i_wnd, &clientRect);
-			int width = clientRect.right - clientRect.left;
-			int height = clientRect.bottom - clientRect.top;
-
-			ResizeDIBSection(width, height);
+			auto windowDimension = GetWindowDimensions(i_wnd);
+			ResizeDIBSection(s_offscreenBuffer, windowDimension.width, windowDimension.height);
 			LOG_TRACE("WM_SIZE");
 		}
 		break;
@@ -115,9 +128,8 @@ LRESULT CALLBACK WinWindowsCb(HWND i_wnd, UINT i_msg, WPARAM i_wParam, LPARAM i_
 			int width = paint.rcPaint.right - paint.rcPaint.left;
 			int height = paint.rcPaint.bottom - paint.rcPaint.top;
 
-			RECT clientRect;
-			GetClientRect(i_wnd, &clientRect);
-			UpdateWindowBuffer(deviceContext, &clientRect, x, y, width, height);
+			auto winDim = GetWindowDimensions(i_wnd);
+			UpdateWindowBuffer(deviceContext, winDim.width, winDim.height, x, y, width, height);
 		}
 		break;
 		default:
@@ -148,7 +160,7 @@ bool EWindow::Init(const WinData& i_winData)
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wc.lpszClassName = i_winData.name;
 	wc.lpfnWndProc = WinWindowsCb;
-
+	wc.style = CS_HREDRAW | CS_VREDRAW;
 	if (!RegisterClassA(&wc))
 	{
 		LOG_ERROR("Window: Cannot register window Class");
@@ -197,21 +209,19 @@ void EWindow::UpdateWindowMessages()
 			DispatchMessage(&message);
 		}
 
-		DrawGradient(xOffset, yOffset);
+		DrawGradient(s_offscreenBuffer, xOffset, yOffset);
 		++xOffset;
 		++yOffset;
 
-		RECT clientRect;
-		GetClientRect(m_hwnd, &clientRect);
-		int width = clientRect.right - clientRect.left;
-		int height = clientRect.bottom - clientRect.top;
+		auto winDim = GetWindowDimensions(m_hwnd);
 		HDC deviceContext = GetDC(m_hwnd);
 		UpdateWindowBuffer(deviceContext,
-						   &clientRect,
+						   winDim.width,
+						   winDim.height,
 						   0,
 						   0,
-						   width,
-						   height);
+						   winDim.width,
+						   winDim.height);
 		ReleaseDC(m_hwnd, deviceContext);
 	}
 }
