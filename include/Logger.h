@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <widemath.h>
 
-namespace 
+namespace
 {
 enum class TextColor : uint8_t
 {

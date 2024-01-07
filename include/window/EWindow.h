@@ -6,20 +6,17 @@ namespace core::platform
 class EWindow
 {
 public:
-	struct WinData
-	{
-		int width;
-		int height;
-		const char* name;
-	};
-	EWindow(const WinData& i_winData);
+	EWindow(int i_width, int i_height, const char* i_name);
 
 	void UpdateWindowMessages();
 
 private:
-	bool Init(const WinData& i_winData);
+	bool Init(int i_width, int i_height, const char* i_name);
 
 private:
+	int m_width;
+	int m_height;
+	const char* m_name;
 	HWND m_hwnd;
 };
 } //namespace core
