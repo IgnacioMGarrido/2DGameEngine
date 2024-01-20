@@ -3,9 +3,6 @@
 namespace core::platform
 {
 
-namespace
-{
-
 struct OffscreenBuffer
 {
 	BITMAPINFO info;
@@ -142,7 +139,6 @@ LRESULT CALLBACK WinWindowsCb(HWND i_wnd, UINT i_msg, WPARAM i_wParam, LPARAM i_
 	}
 
 	return result;
-}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
