@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdio>
-#include <widemath.h>
+#include <stdint.h>
 
 namespace
 {
