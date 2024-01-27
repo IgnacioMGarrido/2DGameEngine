@@ -4,6 +4,7 @@
 namespace Core
 {
 class Window;
+class Renderer;
 class App
 {
 public:
@@ -16,12 +17,12 @@ private:
 	bool InitServices();
 	void ShutDownServices();
 	void ProcessInput();
-	void Render();
 
 protected:
 	virtual void Update() = 0;
 private:
 	Window* m_window;
+	Renderer* m_renderer;
 	bool m_running = true;
 	std::string m_appName;
 };

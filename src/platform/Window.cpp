@@ -1,5 +1,5 @@
 #include <SDL.h>
-#include "engine/platform/Logger.h"
+#include "engine/Engine.h"
 #include "engine/platform/Window.h"
 namespace Core
 {

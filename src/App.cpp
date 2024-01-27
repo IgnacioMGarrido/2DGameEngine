@@ -1,15 +1,13 @@
 #include <SDL.h>
 #include "engine/platform/Logger.h"
 #include "engine/platform/Window.h"
+#include "engine/render/Renderer.h"
 #include "engine/App.h"
 
 namespace Core
 {
 
 //TODO(Nacho): Remove globals
-
-
-SDL_Renderer* g_renderer = nullptr;
 const float g_maxFPS = 60.0;
 const float g_maxFPSms = 1000.0 / g_maxFPS;
 
@@ -41,13 +39,6 @@ void App::ProcessInput()
 
 }
 
-void App::Render()
-{
-	SDL_SetRenderDrawColor(g_renderer, 255, 0, 0, 255);
-	SDL_RenderClear(g_renderer);
-	SDL_RenderPresent(g_renderer);
-}
-
 void App::Run()
 {
 	while(m_running)
@@ -56,7 +47,7 @@ void App::Run()
 
 		ProcessInput();
 		Update();
-		Render();
+		m_renderer->Render();
 
 		static uint64_t end = SDL_GetPerformanceCounter();
 		static float delatTime = (end - start)/(float)SDL_GetPerformanceFrequency() * 1000;
@@ -83,15 +74,10 @@ bool App::InitServices()
 	// Init Window
 	m_window = new Window(m_appName);
 	m_window->Init();
+
+	m_renderer = new Renderer(m_window->GetSDLWindow());
+	m_renderer->Init();
 	// Init Renderer
-
-	g_renderer = SDL_CreateRenderer(m_window->GetSDLWindow(), -1, SDL_RENDERER_ACCELERATED);
-
-	if(!g_renderer)
-	{
-		LOG_ERROR("Failed to Initialize Window");
-		return false;
-	}
 
 	return true;
 }
@@ -100,10 +86,12 @@ bool App::InitServices()
 
 void App::ShutDownServices()
 {
-	SDL_DestroyRenderer(g_renderer);
+	m_renderer->Shutdown();
 	m_window->Shutdown();
-	SDL_Quit();
 
+	SDL_Quit();
+	
+	delete m_renderer;
 	delete m_window;
 }
 
