@@ -19,7 +19,7 @@ private:
 	void ProcessInput();
 
 protected:
-	virtual void Update() = 0;
+	virtual void Update(float i_fixedTick) = 0;
 private:
 	Window* m_window;
 	Renderer* m_renderer;

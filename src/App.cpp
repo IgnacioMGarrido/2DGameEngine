@@ -46,7 +46,7 @@ void App::Run()
 		static uint64_t start = SDL_GetPerformanceCounter();
 
 		ProcessInput();
-		Update();
+		Update(g_maxFPS);
 		m_renderer->Render();
 
 		static uint64_t end = SDL_GetPerformanceCounter();
