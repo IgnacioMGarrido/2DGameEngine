@@ -2,8 +2,9 @@
 #include "engine/platform/Logger.h"
 #include "engine/platform/Window.h"
 #include "engine/render/Renderer.h"
+#include "engine/render/Drawer.h"
 #include "engine/App.h"
-
+#include <functional>
 namespace Core
 {
 
@@ -41,13 +42,18 @@ void App::ProcessInput()
 
 void App::Run()
 {
+	auto renderCb = std::function<void()>([this]
+	{
+		Render();
+	});
+
 	while(m_running)
 	{
 		static uint64_t start = SDL_GetPerformanceCounter();
 
 		ProcessInput();
 		Update(g_maxFPS);
-		m_renderer->Render();
+		m_renderer->Render(renderCb);
 
 		static uint64_t end = SDL_GetPerformanceCounter();
 		static float delatTime = (end - start)/(float)SDL_GetPerformanceFrequency() * 1000;
@@ -77,6 +83,8 @@ bool App::InitServices()
 
 	m_renderer = new Renderer(m_window->GetSDLWindow());
 	m_renderer->Init();
+
+	m_drawer = new Drawer(m_renderer, 1280, 720);
 	// Init Renderer
 
 	return true;
@@ -90,7 +98,8 @@ void App::ShutDownServices()
 	m_window->Shutdown();
 
 	SDL_Quit();
-	
+
+	delete m_drawer;
 	delete m_renderer;
 	delete m_window;
 }

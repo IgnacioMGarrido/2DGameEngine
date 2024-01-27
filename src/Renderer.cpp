@@ -28,6 +28,11 @@ bool Renderer::Init()
 
 }
 
+SDL_Renderer* Renderer::GetRendererPtr() const
+{
+	return m_renderer;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void Renderer::Shutdown()
@@ -37,12 +42,14 @@ void Renderer::Shutdown()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void Renderer::Render()
+void Renderer::Render(std::function<void()>& i_renderCb)
 {
 	LOG_ASSERT(m_targetWindow, "Renderer Target Window is null! something went really bad");
-	
 	SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 255);
 	SDL_RenderClear(m_renderer);
+
+	i_renderCb();
+
 	SDL_RenderPresent(m_renderer);
 }
 

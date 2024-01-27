@@ -5,6 +5,7 @@ namespace Core
 {
 class Window;
 class Renderer;
+class Drawer;
 class App
 {
 public:
@@ -20,6 +21,10 @@ private:
 
 protected:
 	virtual void Update(float i_fixedTick) = 0;
+	virtual void Render() = 0;
+protected:
+	Drawer* m_drawer;
+
 private:
 	Window* m_window;
 	Renderer* m_renderer;

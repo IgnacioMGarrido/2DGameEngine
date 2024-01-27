@@ -3,7 +3,7 @@
 #include "engine/platform/IService.h"
 #include <string>
 
-class SDL_Window;
+struct SDL_Window;
 namespace Core
 {
 
