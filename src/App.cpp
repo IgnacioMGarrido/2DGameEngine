@@ -1,6 +1,6 @@
 #include <SDL.h>
-#include "App.h"
-#include "Logger.h"
+#include "engine/Logger.h"
+#include "engine/App.h"
 
 namespace Core
 {
