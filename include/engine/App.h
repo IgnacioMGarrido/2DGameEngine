@@ -3,6 +3,7 @@
 
 namespace Core
 {
+class Window;
 class App
 {
 public:
@@ -20,7 +21,7 @@ private:
 protected:
 	virtual void Update() = 0;
 private:
-
+	Window* m_window;
 	bool m_running = true;
 	std::string m_appName;
 };

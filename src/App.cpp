@@ -1,5 +1,6 @@
 #include <SDL.h>
-#include "engine/Logger.h"
+#include "engine/platform/Logger.h"
+#include "engine/platform/Window.h"
 #include "engine/App.h"
 
 namespace Core
@@ -7,10 +8,8 @@ namespace Core
 
 //TODO(Nacho): Remove globals
 
-SDL_Window* g_window = nullptr;
+
 SDL_Renderer* g_renderer = nullptr;
-int g_width = 1280;
-int g_height = 720;
 const float g_maxFPS = 60.0;
 const float g_maxFPSms = 1000.0 / g_maxFPS;
 
@@ -62,9 +61,9 @@ void App::Run()
 		static uint64_t end = SDL_GetPerformanceCounter();
 		static float delatTime = (end - start)/(float)SDL_GetPerformanceFrequency() * 1000;
 
-		if(delatTime < g_maxFPS)
+		if(delatTime < g_maxFPSms)
 		{
-			SDL_Delay(g_maxFPS - delatTime);
+			SDL_Delay(g_maxFPSms - delatTime);
 		}
 
 	}
@@ -82,19 +81,11 @@ bool App::InitServices()
 	}
 
 	// Init Window
-
-	g_window = SDL_CreateWindow(m_appName.c_str(),
-								SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, g_width,
-								g_height, SDL_WINDOW_SHOWN);
-	if(!g_window)
-	{
-		LOG_ERROR("Failed to Initialize Window");
-		return false;
-	}
-
+	m_window = new Window(m_appName);
+	m_window->Init();
 	// Init Renderer
 
-	g_renderer = SDL_CreateRenderer(g_window, -1, SDL_RENDERER_ACCELERATED);
+	g_renderer = SDL_CreateRenderer(m_window->GetSDLWindow(), -1, SDL_RENDERER_ACCELERATED);
 
 	if(!g_renderer)
 	{
@@ -110,8 +101,10 @@ bool App::InitServices()
 void App::ShutDownServices()
 {
 	SDL_DestroyRenderer(g_renderer);
-	SDL_DestroyWindow(g_window);
+	m_window->Shutdown();
 	SDL_Quit();
+
+	delete m_window;
 }
 
 } // namespace Core
