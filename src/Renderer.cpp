@@ -45,7 +45,7 @@ void Renderer::Shutdown()
 void Renderer::Render(std::function<void()>& i_renderCb)
 {
 	LOG_ASSERT(m_targetWindow, "Renderer Target Window is null! something went really bad");
-	SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 255);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
 	SDL_RenderClear(m_renderer);
 
 	i_renderCb();

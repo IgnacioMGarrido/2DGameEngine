@@ -11,12 +11,12 @@ Drawer::Drawer(Renderer* i_renderer, int i_canvasWidth, int i_canvasHeight)
 {
 }
 
-void Drawer::DrawFilledRect(int i_xpos, int i_ypos, int i_width, int i_height, uint8_t i_r, uint8_t i_g ,uint8_t i_b)
+void Drawer::DrawFilledRect(const Rect& i_rectangle, const Color& i_color)
 {
-	SDL_Rect green_rect_filled = { .x = i_xpos, .y = i_ypos, .w = i_width, .h = i_height };
+	SDL_FRect sdlRect = { .x = i_rectangle.x, .y = i_rectangle.y, .w = i_rectangle.w, .h = i_rectangle.h };
 
-	SDL_SetRenderDrawColor(m_renderer->GetRendererPtr(), i_r, i_g, i_b, 255);
-	SDL_RenderFillRect(m_renderer->GetRendererPtr(), &green_rect_filled);
+	SDL_SetRenderDrawColor(m_renderer->GetRendererPtr(), i_color.r, i_color.g, i_color.b, 255);
+	SDL_RenderFillRectF(m_renderer->GetRendererPtr(), &sdlRect);
 }
 
 }
