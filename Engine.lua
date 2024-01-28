@@ -5,16 +5,35 @@
   	  cppdialect "C++20"
 	  targetdir "build/%{cfg.buildcfg}"
 	  staticruntime "off"
-	  
+
+	  extDir = {}
+  	  extDir["SDL2"] = "3rdParty/SDL2"
+  	  -- extDir["Glad"] = "3rdParty/Glad"
+
+
   	  files
   	  {
 	  	"include/**.h",
 		"src/**.cpp"
+		-- "%{extDir.Glad}/src/**",
 	  }
 
 	  includedirs
 	  {
-		"include"
+		"include",
+		"%{extDir.SDL2}/include",
+		-- "%{extDir.Glad}/include",
+	  }
+
+	  links
+	  {
+		"SDL2",
+		"SDL2main"
+	  }
+
+	  libdirs
+	  {
+		"%{extDir.SDL2}/lib/x64",
 	  }
 
 	  targetdir ("../build/bin/" .. OutputDir .. "/%{prj.name}")
@@ -30,12 +49,12 @@
 	 		symbols "on"
     		optimize "off"
 
-		filter "configurations:Release"
+	  filter "configurations:Release"
 			defines "RELEASE"
 			runtime "Release"
 			optimize "on"
 
-		filter "configurations:Dist"
+	  filter "configurations:Dist"
 			defines "DIST"
 			runtime "Release"
 			optimize "on" 
