@@ -12,8 +12,8 @@ namespace Core
 const float g_maxFPS = 60.0;
 const float g_maxFPSms = 1000.0 / g_maxFPS;
 
-App::App(std::string i_appName)
-	: m_appName(i_appName)
+App::App(AppContext i_appContext)
+	: m_context(i_appContext)
 {
 	InitServices();
 }
@@ -32,12 +32,72 @@ void App::ProcessInput()
 	SDL_Event e;
 	while(SDL_PollEvent(&e) != 0)
 	{
-		if(e.type == SDL_QUIT)
+		switch (e.type)
 		{
-			m_running = false;
+			case SDL_QUIT:
+			{
+				m_running = false;
+			}
+			break;
+
+			case SDL_KEYDOWN:
+			{
+				switch(e.key.keysym.sym)
+				{
+					case SDLK_LEFT:
+					case SDLK_a:
+					{
+						if(m_context.inputFNs.fLeftArrowPressed)
+						{
+							m_context.inputFNs.fLeftArrowPressed(*this);
+						}
+					}
+					break;
+					case SDLK_RIGHT:
+					case SDLK_d:
+					{
+						if(m_context.inputFNs.fRightArrowPressed)
+						{
+							m_context.inputFNs.fRightArrowPressed(*this);
+						}
+					}
+					break;
+					case SDLK_SPACE:
+					{
+						if(m_context.inputFNs.fSpaceBarPressed)
+						{
+							m_context.inputFNs.fSpaceBarPressed(*this);
+						}
+					}
+					break;
+				}
+			}
+			break;
+
+			case SDL_KEYUP:
+			{
+				case SDLK_LEFT:
+				case SDLK_a:
+				{
+					if(m_context.inputFNs.fLeftArrowReleased)
+					{
+						m_context.inputFNs.fLeftArrowReleased(*this);
+					}
+				}
+				break;
+				case SDLK_RIGHT:
+				case SDLK_d:
+				{
+					if(m_context.inputFNs.fRightArrowReleased)
+					{
+						m_context.inputFNs.fRightArrowReleased(*this);
+					}
+				}
+				break;
+			}
+			break;
 		}
 	}
-
 }
 
 void App::Run()
@@ -50,13 +110,13 @@ void App::Run()
 	while(m_running)
 	{
 		static uint64_t start = SDL_GetPerformanceCounter();
-
+		static float delatTime = g_maxFPSms;
 		ProcessInput();
-		Update(g_maxFPS);
+		Update(delatTime);
 		m_renderer->Render(renderCb);
 
 		static uint64_t end = SDL_GetPerformanceCounter();
-		static float delatTime = (end - start)/(float)SDL_GetPerformanceFrequency() * 1000;
+		delatTime = (end - start)/(float)SDL_GetPerformanceFrequency() * 1000;
 
 		if(delatTime < g_maxFPSms)
 		{
@@ -78,13 +138,13 @@ bool App::InitServices()
 	}
 
 	// Init Window
-	m_window = new Window(m_appName);
+	m_window = new Window(m_context.appName, m_context.winDimX, m_context.winDimY);
 	m_window->Init();
 
 	m_renderer = new Renderer(m_window->GetSDLWindow());
 	m_renderer->Init();
 
-	m_drawer = new Drawer(m_renderer, 1280, 720);
+	m_drawer = new Drawer(m_renderer);
 	// Init Renderer
 
 	return true;

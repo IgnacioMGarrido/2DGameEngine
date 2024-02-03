@@ -4,10 +4,8 @@
 namespace Core
 {
 
-Drawer::Drawer(Renderer* i_renderer, int i_canvasWidth, int i_canvasHeight)
+Drawer::Drawer(Renderer* i_renderer)
 	: m_renderer(i_renderer)
-	, m_canvasWidth(i_canvasWidth)
-	, m_canvasHeight(i_canvasHeight)
 {
 }
 

@@ -22,12 +22,10 @@ public:
 		uint8_t b;
 	};
 
-	Drawer(Renderer* i_renderer, int i_canvasWidth, int i_canvasHeight);
+	Drawer(Renderer* i_renderer);
 
 	void DrawFilledRect(const Rect& i_rectangle, const Color& i_color);
 private:
-	int m_canvasWidth;
-	int m_canvasHeight;
 	Renderer* m_renderer;
 };
 }
